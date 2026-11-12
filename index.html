@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peripheral color caller</title>
+<meta name="description" content="Calls out colors at random, varied intervals for peripheral vision chart practice. Works offline in any modern browser.">
+<style>
+:root{
+  --bg:#e9ecef; --surface:#f7f8f9; --ink:#22303a; --muted:#5d6b75; --line:#c9d0d6;
+  --blue:#1f3f8f; --pink:#c4196f; --orange:#d9822b; --green:#4c8c2b;
+  --btn:#2e5a6b; --btn-ink:#ffffff;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#161b1f; --surface:#1f262b; --ink:#e3e8ec; --muted:#9aa7b0; --line:#34404a;
+    --btn:#4f8ea3; --btn-ink:#0f1417; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161b1f; --surface:#1f262b; --ink:#e3e8ec; --muted:#9aa7b0; --line:#34404a;
+  --btn:#4f8ea3; --btn-ink:#0f1417; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:18px;line-height:1.45}
+main{max-width:30rem;margin:0 auto;padding:1.25rem 1.25rem 2.5rem}
+h1{font-size:1.5rem;margin:.25rem 0 .25rem}
+.lede{color:var(--muted);margin:0 0 1rem}
+details.howto{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.7rem 1rem;margin:0 0 1.25rem}
+details.howto summary{font-weight:700;cursor:pointer}
+details.howto ol{margin:.6rem 0 .2rem;padding-left:1.3rem}
+details.howto li{margin:.3rem 0}
+.warn{background:var(--surface);border:2px solid var(--orange);border-radius:8px;padding:.7rem 1rem;margin:0 0 1.25rem}
+.warn[hidden]{display:none}
+
+.board{position:relative;aspect-ratio:3/4;max-height:44vh;margin:0 auto 1.25rem;
+  background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.dot{position:absolute;width:20%;aspect-ratio:1;border-radius:50%;
+  transition:transform .15s ease, box-shadow .15s ease}
+.dot.tl{top:8%;left:8%}
+.dot.tr{top:8%;right:8%}
+.dot.bl{bottom:8%;left:8%}
+.dot.br{bottom:8%;right:8%}
+.dot.blue{background:var(--blue)}
+.dot.pink{background:var(--pink)}
+.dot.orange{background:var(--orange)}
+.dot.green{background:var(--green)}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:.25rem 1rem;margin:0 0 .6rem}
+.dot.lit{transform:scale(1.25);box-shadow:0 0 0 6px var(--ink)}
+.center{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.center .fix{width:7%;aspect-ratio:1;border-radius:50%;background:#2c7a73}
+.center .word{position:absolute;font-size:2rem;font-weight:700;top:58%}
+.status{position:absolute;bottom:-1.9rem;left:0;right:0;text-align:center;color:var(--muted);font-size:.95rem}
+
+.controls{display:grid;gap:1rem;margin-top:2.5rem}
+.row{display:grid;gap:.35rem}
+.row label{font-weight:700}
+.row .val{color:var(--muted);font-weight:400}
+input[type=range]{width:100%;accent-color:var(--btn)}
+select{font:inherit;padding:.5rem;border-radius:6px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink)}
+.check{display:flex;gap:.6rem;align-items:center}
+.check input{width:1.3rem;height:1.3rem;accent-color:var(--btn)}
+button{font:inherit;font-weight:700;font-size:1.25rem;width:100%;padding:1rem;border:0;border-radius:10px;
+  background:var(--btn);color:var(--btn-ink);cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+button.stop{background:var(--ink);color:var(--bg)}
+.note{color:var(--muted);font-size:.9rem;margin:.5rem 0 0}
+button.test{background:transparent;color:var(--ink);border:1px solid var(--line);font-size:1rem;padding:.7rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Peripheral color caller</h1>
+  <p class="lede">Keep your eyes on a center target. When a color is called, find it with your peripheral vision.</p>
+  <noscript><p class="warn">This tool needs JavaScript. Open it in Chrome, Safari, or Edge.</p></noscript>
+  <p class="warn" id="voiceWarn" hidden>This browser has no voice available, so calls will be silent. Try Chrome or Safari, check that the phone isn't on silent, or turn on "Also show the call on screen" and have a partner read the calls aloud.</p>
+  <details class="howto">
+    <summary>How to set it up</summary>
+    <ol>
+      <li>Put four cards on a wall in a rectangle, one in each corner, each with a dot: blue, pink, orange, green. Put a small target in the middle.</li>
+      <li>Tap Shuffle card positions and arrange your cards to match, so you don't memorize where each color is.</li>
+      <li>Stand where your therapist recommends, with your eyes on the center target.</li>
+      <li>Set the timing your therapist suggests, tap Test voice to check sound, then tap Start and set the phone down.</li>
+      <li>When a color is called, point to or touch it without moving your eyes off the center.</li>
+    </ol>
+  </details>
+
+  <div class="board" aria-hidden="true">
+    <div class="dot tl blue" data-pos="tl"></div><div class="dot tr pink" data-pos="tr"></div>
+    <div class="dot bl orange" data-pos="bl"></div><div class="dot br green" data-pos="br"></div>
+    <div class="center"><div class="fix"></div><div class="word" id="word"></div></div>
+    <div class="status" id="status">Ready</div>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <label>Set up your cards</label>
+      <p class="note" style="margin:0 0 .4rem">Shuffle, then move your cards on the wall to match.</p>
+      <div class="layout" id="layout"></div>
+      <button id="shuffle" class="test">Shuffle card positions</button>
+    </div>
+    <button id="go">Start</button>
+
+    <div class="row">
+      <label for="minI">Fastest gap <span class="val" id="minV"></span></label>
+      <input type="range" id="minI" min="0.5" max="10" step="0.1" value="0.8">
+    </div>
+    <div class="row">
+      <label for="maxI">Slowest gap <span class="val" id="maxV"></span></label>
+      <input type="range" id="maxI" min="0.8" max="10" step="0.1" value="2.2">
+    </div>
+    <div class="row">
+      <label for="dur">Session length</label>
+      <select id="dur">
+        <option value="30">30 seconds</option>
+        <option value="60" selected>1 minute</option>
+        <option value="90">90 seconds</option>
+        <option value="120">2 minutes</option>
+        <option value="180">3 minutes</option>
+        <option value="0">Until I stop</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="rate">Voice speed <span class="val" id="rateV"></span></label>
+      <input type="range" id="rate" min="0.8" max="1.6" step="0.1" value="1.1">
+    </div>
+    <label class="check"><input type="checkbox" id="norep" checked> No back-to-back repeats</label>
+    <label class="check"><input type="checkbox" id="pair"> Sometimes call two colors at once</label>
+    <div class="row" id="pairRow">
+      <label for="pairF">How often two are called</label>
+      <select id="pairF">
+        <option value="0.15">Now and then</option>
+        <option value="0.3" selected>About a third of the time</option>
+        <option value="0.5">About half the time</option>
+        <option value="1">Every call</option>
+      </select>
+    </div>
+    <label class="check"><input type="checkbox" id="show"> Also show the call on screen</label>
+    <button id="test" class="test">Test voice</button>
+    <p class="note">Turn your volume up. If you feel dizzy, nauseous, or your symptoms climb, stop and rest.</p>
+  </div>
+</main>
+
+<script>
+const COLORS=["blue","pink","orange","green"];
+const POS=["tl","tr","bl","br"],POSN={tl:"Top left",tr:"Top right",bl:"Bottom left",br:"Bottom right"};
+let layout=["blue","pink","orange","green"];
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+function applyLayout(){
+  document.querySelectorAll(".dot").forEach(d=>{const p=d.dataset.pos;d.className="dot "+p+" "+layout[POS.indexOf(p)];});
+  document.getElementById("layout").innerHTML=POS.map((p,i)=>`<span>${POSN[p]}: <b>${cap(layout[i])}</b></span>`).join("");
+}
+function shuffleLayout(){
+  if(running) return;
+  let n;do{n=[...layout];for(let i=3;i>0;i--){const j=Math.floor(Math.random()*(i+1));[n[i],n[j]]=[n[j],n[i]];}}
+  while(n.every((c,i)=>c===layout[i]));
+  layout=n;applyLayout();save();
+}
+const $=id=>document.getElementById(id);
+const minI=$("minI"),maxI=$("maxI"),rate=$("rate"),go=$("go"),word=$("word"),status=$("status");
+let running=false,timer=null,endAt=0,last=null,count=0,wakeLock=null,tick=null;
+
+function load(){
+  try{const s=JSON.parse(localStorage.getItem("pcc-share")||"{}");
+    for(const k of ["minI","maxI","rate","dur","pairF"]) if(s[k]!=null) $(k).value=s[k];
+    if(s.pair!=null) $("pair").checked=s.pair;
+    if(Array.isArray(s.layout)&&s.layout.length===4&&COLORS.every(c=>s.layout.includes(c))) layout=s.layout;
+    if(s.norep!=null) $("norep").checked=s.norep;
+    if(s.show!=null) $("show").checked=s.show;
+  }catch(e){}
+}
+function save(){
+  try{localStorage.setItem("pcc-share",JSON.stringify({minI:minI.value,maxI:maxI.value,rate:rate.value,
+    dur:$("dur").value,norep:$("norep").checked,show:$("show").checked,
+    pair:$("pair").checked,pairF:$("pairF").value,layout}));}catch(e){}
+  $("pairRow").style.display=$("pair").checked?"":"none";
+}
+function labels(){
+  if(+maxI.value<+minI.value) maxI.value=minI.value;
+  $("minV").textContent=(+minI.value).toFixed(1)+" s";
+  $("maxV").textContent=(+maxI.value).toFixed(1)+" s";
+  $("rateV").textContent=(+rate.value).toFixed(1)+"×";
+}
+[minI,maxI,rate].forEach(el=>el.addEventListener("input",()=>{labels();save()}));
+["dur","norep","show","pair","pairF"].forEach(id=>$(id).addEventListener("change",save));
+
+let enVoice=null;
+function findVoice(){
+  try{const vs=speechSynthesis.getVoices();
+    enVoice=vs.find(v=>v.lang=="en-US"&&v.localService)||vs.find(v=>v.lang&&v.lang.startsWith("en"))||null;}catch(e){}
+}
+if("speechSynthesis" in window){findVoice();speechSynthesis.addEventListener?.("voiceschanged",findVoice);}
+setTimeout(()=>{
+  let none=!("speechSynthesis" in window);
+  if(!none){try{none=speechSynthesis.getVoices().length===0}catch(e){none=true}}
+  if(none) document.getElementById("voiceWarn").hidden=false;
+},2000);
+function say(text){
+  try{const ss=window.speechSynthesis;if(!ss) return;
+    if(ss.speaking||ss.pending) ss.cancel();
+    const u=new SpeechSynthesisUtterance(text);u.rate=+rate.value;u.lang="en-US";u.volume=1;
+    if(enVoice) u.voice=enVoice;
+    ss.resume();ss.speak(u);}catch(e){}
+}
+function pick(){
+  let c;do{c=COLORS[Math.floor(Math.random()*4)]}while($("norep").checked&&c===last);
+  last=c;return c;
+}
+function pickPair(){
+  const a=pick();let b;do{b=COLORS[Math.floor(Math.random()*4)]}while(b===a);
+  last=b;return [a,b];
+}
+function light(cs){
+  document.querySelectorAll(".dot").forEach(d=>d.classList.remove("lit"));
+  if($("show").checked&&Array.isArray(cs)){cs.forEach(c=>document.querySelector(".dot."+c).classList.add("lit"));word.textContent=cs.join(" + ");}
+  else word.textContent="";
+}
+function next(){
+  if(!running) return;
+  if(endAt&&Date.now()>=endAt){finish();return;}
+  const two=$("pair").checked&&Math.random()<+$("pairF").value;
+  const cs=two?pickPair():[pick()];
+  count++;say(cs.join(" and "));light(cs);
+  const lo=+minI.value,hi=+maxI.value;
+  timer=setTimeout(next,(lo+Math.random()*(hi-lo)+(two?0.6:0))*1000);
+}
+function start(){
+  if(!("speechSynthesis" in window)){status.textContent="Speech isn't available here. Open this page in Safari or Chrome.";return;}
+  say("Ready");
+  running=true;count=0;last=null;go.textContent="Stop";go.classList.add("stop");
+  try{navigator.wakeLock?.request("screen").then(w=>{wakeLock=w}).catch(()=>{})}catch(e){}
+  let n=3;status.textContent="Starting in 3";
+  const cd=setInterval(()=>{
+    if(!running){clearInterval(cd);return}
+    n--; if(n>0){status.textContent="Starting in "+n}
+    else{clearInterval(cd);const d=+$("dur").value;endAt=d?Date.now()+d*1000:0;
+      tick=setInterval(()=>{status.textContent=endAt?
+        Math.max(0,Math.ceil((endAt-Date.now())/1000))+" s left · "+count+" calls":count+" calls"},250);
+      next();}
+  },1000);
+}
+function stopAll(msg){
+  running=false;clearTimeout(timer);clearInterval(tick);
+  try{speechSynthesis.cancel()}catch(e){}
+  try{wakeLock?.release()}catch(e){}wakeLock=null;
+  go.textContent="Start";go.classList.remove("stop");light("none");word.textContent="";
+  status.textContent=msg;
+}
+function finish(){stopAll("Done · "+count+" calls");say("Done");}
+go.addEventListener("click",()=>running?stopAll("Stopped · "+count+" calls"):start());
+$("test").addEventListener("click",()=>{
+  if(!("speechSynthesis" in window)){status.textContent="Speech isn't available here. Open this page in Safari or Chrome.";return;}
+  say("blue, pink, orange, green");status.textContent="Testing voice";});
+$("shuffle").addEventListener("click",shuffleLayout);
+load();applyLayout();labels();save();
+</script>
+</body>
+</html>
