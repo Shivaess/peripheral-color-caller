@@ -1,6 +1,6 @@
 # Peripheral color caller
 
-**Live site:** _(link added once GitHub Pages is up)_
+**Live site:** <https://shivaess.github.io/peripheral-color-caller/>
 
 A one-page web tool for peripheral vision chart practice. It speaks the colors
 **blue, pink, orange, and green** at random, varied intervals. You keep your eyes
